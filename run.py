@@ -3,11 +3,14 @@
 import sys
 import json
 import time
+import datetime
 import pcapy
 import impacket
 from impacket import ImpactDecoder
 g_decoder = ImpactDecoder.RadioTapDecoder()
 
+from timedstrings import TimedStrings
+g_last_minute_macs = TimedStrings(60)
 
 ifc = 'mon0'
 
@@ -16,7 +19,10 @@ def str_mac(b):
 
 
 def on_src_mac(mac):
-    pass
+    if g_last_minute_macs.is_stored(mac):
+        return
+    g_last_minute_macs.store(mac)
+    print '%s Found MAC %s' % (datetime.datetime.now(), mac)
 
 
 def on_packet(pkt):
@@ -35,8 +41,8 @@ def on_packet(pkt):
 
     on_src_mac(src)
 
-    sys.stdout.write('.')
-    sys.stdout.flush()
+    #sys.stdout.write('.')
+    #sys.stdout.flush()
     #print '##### %s --> %s    (%s)' % (src, dst, data_frame.__class__)
 
 def cb_packet(header, body):
