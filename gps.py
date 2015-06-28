@@ -24,10 +24,20 @@ class GPS(object):
                 l = m
             else:
                 r = m
+        t1 = self.pos[l][0]
         lat1 = self.pos[l][1]
         long1 = self.pos[l][2]
+        t2 = self.pos[r][0]
         lat2 = self.pos[r][1]
         long2 = self.pos[r][2]
 
-        return {'lat': (lat1 + lat2) / 2, 'long': (long1 + long2) / 2}
+        if t1 == t2:
+            return {'lat': lat1, 'long': long1}
+
+        # linear interpolation
+        ratio = (ts - t1) / (t2 - t1)
+        lat = lat1 + (lat2 - lat1) * ratio
+        lon = long1 + (long2 - long1) * ratio
+
+        return {'lat': lat, 'long': lon}
 
