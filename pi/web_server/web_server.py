@@ -5,6 +5,7 @@ import cherrypy
 import time
 import json
 import logging
+import hashlib, identicon, StringIO
 logger = logging.getLogger('web_server')
 
 FILE_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -18,9 +19,19 @@ class SaveMacsDashboard(object):
         self.db = MacDumpDB()
     
     @cherrypy.expose
+    def get_icon(self, s='test'):
+        h = hashlib.md5(s.encode('utf-8')).hexdigest()
+        img = identicon.render_identicon(int(h[:8], 16), 20)
+        cherrypy.response.headers['Content-Type'] = "image/png"
+        buf = StringIO.StringIO()
+        img.save(buf, 'PNG')
+        return buf.getvalue()
+
+    @cherrypy.expose
     def latest(self):
         latest = self.db.get_latest_macs(10)
-        return '<br />'.join('%.1d sec ago - %s (%d)' % (time.time() - x['ts'], x['mac'], x['signal']) for x in latest)
+        return json.dumps(latest)
+        #return '<br />'.join('%.1d sec ago - %s (%d)' % (time.time() - x['ts'], x['mac'], x['signal']) for x in latest)
 
 
 if __name__ == '__main__':

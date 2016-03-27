@@ -1,4 +1,4 @@
-aptitude install -y python-dev libpcap-dev sqlite3
-pip install pcapy impacket cherrypy
+aptitude install -y python-dev libpcap-dev sqlite3 libjpeg-dev
+pip install pcapy impacket cherrypy identicon
 
 
