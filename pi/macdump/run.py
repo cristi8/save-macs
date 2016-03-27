@@ -1,16 +1,22 @@
 #!/usr/bin/env python
 
+import sys, os
 import logging
 from mac_listener import MacListener
 import impacket
 import time
-from save_macs_db import SaveMacsDB
+
+FILE_DIR = os.path.dirname(os.path.realpath(__file__))
+APP_DIR = os.path.normpath(os.path.join(FILE_DIR, '..'))
+sys.path.append(APP_DIR)
+
+from macdump_db import MacDumpDB
 
 logger = logging.getLogger('main')
 
 class SaveMacs(object):
     def __init__(self):
-        self.db = SaveMacsDB()
+        self.db = MacDumpDB()
     
     def start(self, iface):
         ml = MacListener(iface)
