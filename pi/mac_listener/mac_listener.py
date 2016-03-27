@@ -17,7 +17,7 @@ logger = logging.getLogger('MacListener')
 
 class MacListener(object):
     def __init__(self, iface='mon0', silence_mac_period=60):
-        self.packet_queue = Queue.Queue(100000)
+        self.packet_queue = Queue.Queue(100000) # Large buffer to ensure minimal packet loss
         self.running = True
         
         self.iface = iface
@@ -30,27 +30,45 @@ class MacListener(object):
     def start(self, callback):
         self.callback = callback
         
-        processing_thread = threading.Thread(target=self._processor_thread_start)
+        # Start monitoring thread
+        processing_thread = threading.Thread(target=self._listener_thread_start)
         processing_thread.daemon = True
         processing_thread.start()
-
-        sniffer = pcapy.open_live(self.iface, 2000, 1, 50)
-        sniffer.setfilter('')
-        sniffer.loop(0, self._cb_packet)
-
-    def _cb_packet(self, header, body):
-        self.packet_queue.put(body)
-    
-    def _processor_thread_start(self):
+        
+        # Make sure the listening thread doesn't exit too quicly
+        for i in range(100):
+            if self.packet_queue.qsize() > 0:
+                break
+            time.sleep(0.01)
+        
+        if not self.running:
+            logger.error("Can't listen on interface")
+            return
+        
+        # Main processing loop
         while True:
             try:
                 body = self.packet_queue.get()
                 dec = self.radio_tap_decoder.decode(body)
                 self._on_packet(dec)
             except KeyboardInterrupt:
-                raise
+                logger.info('Ctrl+C was pressed')
+                return
             except Exception as ex:
                 logger.error('Packet error: %s', str(ex))
+
+
+    def _cb_packet(self, header, body):
+        self.packet_queue.put(body)
+    
+    def _listener_thread_start(self):
+        try:
+            sniffer = pcapy.open_live(self.iface, 2000, 1, 50)
+            sniffer.setfilter('')
+            sniffer.loop(0, self._cb_packet)
+        finally:
+            self.running = False
+            logger.warning('Listening thread finished')
 
     def _on_packet(self, pkt):
         data_frame = pkt.child().child()
@@ -97,7 +115,7 @@ def _debug_callback(p):
     print '%s Found MAC %s' % (datetime.datetime.now(), p['src'])
 
 if __name__ == '__main__':
-    logging.basicConfig()
+    logging.basicConfig(level=logging.INFO)
     a = MacListener()
     logger.info('Starting...')
     a.start(_debug_callback)

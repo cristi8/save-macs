@@ -2,28 +2,25 @@
 
 import logging
 from mac_listener import MacListener
-import time
 import impacket
-
+import time
+from save_macs_db import SaveMacsDB
 
 logger = logging.getLogger('main')
 
-logging.basicConfig(level=logging.INFO)
+class SaveMacs(object):
+    def __init__(self):
+        self.db = SaveMacsDB()
+    
+    def start(self, iface):
+        ml = MacListener(iface)
+        ml.start(self.cb)
+    
+    def cb(self, p):
+        self.db.store_mac(p['timestamp'], p['src'], p['signal'])
 
-def cb(p):
-    pkt = p['packet']
-    data_frame = pkt.child().child()
-    if data_frame.__class__ == impacket.dot11.Dot11DataFrame:
-        pass
-    elif data_frame.__class__ == impacket.dot11.Dot11ManagementFrame:
-        pass
-    else:
-        print '......... %s' % data_frame.__class__
-        return
-
-    print '[%3d] %s -> %s (%s)' % (p['queued_packets'], p['src'], p['dst'], p['signal'])
-
-
-ml = MacListener('mon0')
-ml.start(cb)
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    a = SaveMacs()
+    a.start('mon0')
 

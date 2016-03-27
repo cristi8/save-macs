@@ -1,4 +1,4 @@
-aptitude install -y python-dev libpcap-dev mongodb
-pip install pcapy impacket
+aptitude install -y python-dev libpcap-dev sqlite3
+pip install pcapy impacket cherrypy
 
 
