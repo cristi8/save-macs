@@ -19,7 +19,7 @@ from gps import GPS
 gps = GPS()
 
 CSIZE = 2
-SEC = 30
+SEC = 120
 
 img = Image.open('map_img/' + image_filename)
 img = img.convert('RGB')
