@@ -36,11 +36,15 @@
       </div>
     </nav>
     <div class="container">
-        <h1>Hello, world!</h1>
-        <div class="results .clearfix">
+        <div class="controls-div">
+            <button class="btn btn-large btn-primary" onclick="update()">Refresh</button>
+        </div>
+        <div class="results clearfix">
             <div class="result">
-                <div class="ts_ago"></div>
-                <div class="mac_img"></div>
+                <div class="ts-ago"></div>
+                <a class="result-link">
+                    <div class="mac-img"></div>
+                </a>
                 <div class="mac"></div>
                 <div class="signal"></div>
             </div>
@@ -48,29 +52,35 @@
         <hr>
 
         <footer>
-        <p>&copy; Company 2015</p>
+        <p>---</p>
         </footer>
     </div> <!-- /container -->
     <script>
     function update() {
         $.getJSON('/latest', function(data) {
             var directives = {
-                ts: {
+                'ts-ago': {
                     text: function() {
                         var time_ago = Date.now() / 1000 - this.ts;
                         return Math.ceil(time_ago) + ' sec ago';
                     }
                 },
-                mac_img: {
+                'mac-img': {
                     html: function() {
                         return '<img src="/get_icon?s=' + this.mac + '" />';
+                    }
+                },
+                'result-link': {
+                    href: function() {
+                        return '/mac_history?mac=' + this.mac;
                     }
                 }
             }
             $('.results').render(data, directives);
         });
     }
-    setInterval(update, 2000);
+    
+    update();
     </script>
 </body>
 </html>

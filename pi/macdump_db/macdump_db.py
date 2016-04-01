@@ -33,9 +33,19 @@ class MacDumpDB(object):
             #if time.time() - t0 >= 0.5:
             print 'Insert took %.2f seconds' % (time.time()-t0,)
 
+    def get_mac_history(self, mac):
+        t0 = int(time.time() - (3600 * 24))
+        con = sqlite3.connect(DB_PATH)
+        cursor = con.cursor()
+        cursor.execute('SELECT * FROM seen WHERE mac=? AND ts>? ORDER BY ts DESC', (mac, t0))
+        results = []
+        for entry in cursor:
+            results.append({'ts': entry[0], 'signal': entry[2]})
+        cursor.close()
+        return results
 
     def get_latest_macs(self, top):
-        con = sqlite3.connect(DB_PATH, timeout=2)
+        con = sqlite3.connect(DB_PATH)
         cursor = con.cursor()
         cursor.execute('SELECT * FROM seen ORDER BY ts DESC')
         results = []
@@ -47,5 +57,23 @@ class MacDumpDB(object):
             seen_macs.add(entry[1])
             if len(results) >= top:
                 break
+        cursor.close()
+        return results
+
+    def get_latest_macs_by_ts(self, latest_seconds):
+        t0 = time.time() - latest_seconds;
+        con = sqlite3.connect(DB_PATH)
+        cursor = con.cursor()
+        cursor.execute('SELECT * FROM seen ORDER BY ts DESC')
+        results = []
+        seen_macs = set()
+        for entry in cursor:
+            if entry[0] < t0:
+                break
+            if entry[1] in seen_macs:
+                continue
+            results.append({'ts': entry[0], 'mac': entry[1], 'signal': entry[2]})
+            seen_macs.add(entry[1])
+        
         cursor.close()
         return results

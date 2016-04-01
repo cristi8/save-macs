@@ -4,7 +4,19 @@ body {
 }
 
 .result {
-    width: 300;
-    height: 200;
     float: left;
+    margin: 10px;
+}
+
+.mac-img img {
+    width: 60px;
+    height: 60px;
+}
+
+.mac {
+    font-size: 0.9em;
+}
+
+.controls-div {
+    margin: 10px;
 }

@@ -23,16 +23,30 @@ class SaveMacsDashboard(object):
         h = hashlib.md5(s.encode('utf-8')).hexdigest()
         img = identicon.render_identicon(int(h[:8], 16), 20)
         cherrypy.response.headers['Content-Type'] = "image/png"
+        cherrypy.response.headers['Cache-Control'] = '31536000'
+        cherrypy.response.headers['ETag'] = s
         buf = StringIO.StringIO()
         img.save(buf, 'PNG')
         return buf.getvalue()
 
     @cherrypy.expose
     def latest(self):
-        latest = self.db.get_latest_macs(10)
+        latest = self.db.get_latest_macs_by_ts(600)
         return json.dumps(latest)
         #return '<br />'.join('%.1d sec ago - %s (%d)' % (time.time() - x['ts'], x['mac'], x['signal']) for x in latest)
 
+    @cherrypy.expose
+    def mac_history(self, mac=''):
+        mac_hist = self.db.get_mac_history(mac)
+        mac_hist_text = ''
+        for x in mac_hist:
+            s = '%.3f hours ago (%06.1f min ago) - signal %d' % (
+                (time.time() - x['ts']) / 3600.0,
+                (time.time() - x['ts']) / 60.0,
+                x['signal']
+            )
+            mac_hist_text += s + '\n'
+        return '<html><body><h1><a href="/"><img src="/get_icon?s=%s"></a> %s</h1><pre>%s</pre></body></html>' % (mac, mac, mac_hist_text)
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
