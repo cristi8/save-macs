@@ -77,3 +77,10 @@ class MacDumpDB(object):
         
         cursor.close()
         return results
+
+    def create_cursor(self):
+        con = sqlite3.connect(DB_PATH)
+        cursor = con.cursor()
+        return cursor
+    
+        
